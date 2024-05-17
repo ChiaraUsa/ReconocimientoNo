@@ -46,8 +46,8 @@ if not cap.isOpened():
     print("No se pudo abrir la cámara")
     exit()
 
-# Definir la región de interés (ROI) más pequeña
-roi_top_left = (200, 200)  # Coordenadas de la esquina superior izquierda del cuadrado
+# Definir la región de interés (ROI)
+roi_top_left = (100, 100)  # Coordenadas de la esquina superior izquierda del cuadrado
 roi_bottom_right = (300, 300)  # Coordenadas de la esquina inferior derecha del cuadrado
 
 while True:
