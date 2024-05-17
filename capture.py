@@ -3,6 +3,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
+# Desactivar los mensajes de información de TensorFlow
+tf.get_logger().setLevel('ERROR')
+
 # Cargar el modelo preentrenado en el conjunto de datos MNIST
 model = load_model('mnist_model.h5')
 
@@ -17,12 +20,14 @@ def segment_digits(image):
     positions = []
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        digit = image[y:y+h, x:x+w]
-        digit = cv2.resize(digit, (28, 28), interpolation=cv2.INTER_AREA)
-        digit = digit.astype('float32') / 255
-        digit = np.expand_dims(digit, axis=-1)
-        digits.append(digit)
-        positions.append((x, y, w, h))
+        # Filtrar contornos pequeños para reducir ruido
+        if w > 5 and h > 5:
+            digit = image[y:y+h, x:x+w]
+            digit = cv2.resize(digit, (28, 28), interpolation=cv2.INTER_AREA)
+            digit = digit.astype('float32') / 255
+            digit = np.expand_dims(digit, axis=-1)
+            digits.append(digit)
+            positions.append((x, y, w, h))
     return digits, positions
 
 def recognize_digits(digits):
@@ -41,6 +46,10 @@ if not cap.isOpened():
     print("No se pudo abrir la cámara")
     exit()
 
+# Definir la región de interés (ROI) más pequeña
+roi_top_left = (200, 200)  # Coordenadas de la esquina superior izquierda del cuadrado
+roi_bottom_right = (300, 300)  # Coordenadas de la esquina inferior derecha del cuadrado
+
 while True:
     ret, frame = cap.read()
 
@@ -48,14 +57,20 @@ while True:
         print("No se pudo recibir el frame (stream end?). Saliendo...")
         break
 
-    processed_image = preprocess_image(frame)
+    # Dibujar el cuadrado en el frame original para visualizar la ROI
+    cv2.rectangle(frame, roi_top_left, roi_bottom_right, (255, 0, 0), 2)
+
+    # Extraer la región de interés
+    roi = frame[roi_top_left[1]:roi_bottom_right[1], roi_top_left[0]:roi_bottom_right[0]]
+
+    processed_image = preprocess_image(roi)
     digits, positions = segment_digits(processed_image)
     recognized_digits = recognize_digits(digits)
 
-    # Dibujar los dígitos reconocidos en el frame original
+    # Dibujar los dígitos reconocidos en la ROI
     for (x, y, w, h), digit in zip(positions, recognized_digits):
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(frame, str(digit), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(roi, str(digit), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
     # Mostrar el frame en una ventana llamada 'frame'
     cv2.imshow('frame', frame)
