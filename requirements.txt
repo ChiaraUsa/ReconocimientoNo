@@ -1,3 +1,6 @@
 opencv-python
 tensorflow
 numpy
+joblib
+matplotlib
+scikit-learn

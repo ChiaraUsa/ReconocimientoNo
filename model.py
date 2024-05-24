@@ -1,31 +1,32 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models
+import numpy as np
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from joblib import dump
 
 # Cargar el conjunto de datos MNIST
-mnist = tf.keras.datasets.mnist
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+digits = datasets.load_digits()
 
-# Normalizar los datos
-x_train, x_test = x_train / 255.0, x_test / 255.0
+# Preprocesar los datos
+X = digits.images.reshape((len(digits.images), -1))
+y = digits.target
 
-# Construir el modelo
-model = models.Sequential([
-    layers.Flatten(input_shape=(28, 28)),
-    layers.Dense(128, activation='relu'),
-    layers.Dropout(0.2),
-    layers.Dense(10)
-])
+# Dividir los datos en conjuntos de entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
 
-# Compilar el modelo
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+# Escalar los datos
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-# Entrenar el modelo
-model.fit(x_train, y_train, epochs=5)
+# Entrenar el modelo SVM
+clf = SVC(gamma=0.001)
+clf.fit(X_train, y_train)
 
 # Evaluar el modelo
-model.evaluate(x_test, y_test, verbose=2)
+print(f"Accuracy: {clf.score(X_test, y_test) * 100:.2f}%")
 
-# Guardar el modelo
-model.save('mnist_model.h5')
+# Guardar el modelo y el escalador
+dump(clf, 'svm_digit_classifier.joblib')
+dump(scaler, 'scaler.joblib')
