@@ -1,0 +1,100 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Encrypted credentials
+*.key
+
+# Editor directories and files
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Visual Studio specific files
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj*
+*.pdb
+*.ipch
+*.aps
+*.ilk
+*.iobj
+*.ipdb
+*.obj
+*.pch
+*.idb
+*.pdb
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.log
+*.vspscc
+*.vssscc
+*.ncb
+*.suo
+*.user
+*.ipch
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.log
+*.sln
+*.suo
+*.csproj.user
+*.userosscache
+*.userprefs
+*.pdb
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Local virtual environment
+.venv/
+.venv.bak/
+
+# Python-specific files
+*.pyc
+*.pyo
+*.pyd
+*.pyp
+
+# Machine learning models
+*.model
+*.joblib
+
+# DS_Store
+.DS_Store
