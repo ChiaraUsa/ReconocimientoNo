@@ -22,7 +22,7 @@ def segment_digits(image):
             digit = image[y:y+h, x:x+w]
             digit = cv2.resize(digit, (8, 8), interpolation=cv2.INTER_AREA)
             digit = digit.astype('float32') / 255
-            digit = digit.reshape(-1)
+            digit = digit.reshape(1, -1)  # Ajustar a 2D
             digits.append(digit)
             positions.append((x, y, w, h))
     return digits, positions
@@ -30,7 +30,8 @@ def segment_digits(image):
 def recognize_digits(digits, scaler):
     predictions = []
     if digits:
-        standardized_digits = scaler.transform(digits)
+        digits_array = np.array(digits).reshape(len(digits), -1)
+        standardized_digits = scaler.transform(digits_array)
         predictions = clf.predict(standardized_digits)
     return predictions
 
