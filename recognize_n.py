@@ -4,8 +4,8 @@ from joblib import load
 from sklearn.preprocessing import StandardScaler
 
 # Cargar el modelo SVM y el scaler
-clf = load('svm_digit_classifier.joblib')
-scaler = load('scaler.joblib')
+clf = load('models/svm_digit_classifier.joblib')
+scaler = load('models/scaler.joblib')
 
 def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)

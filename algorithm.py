@@ -3,7 +3,7 @@ import numpy as np
 from joblib import load
 from numpy.linalg import eig
 
-# Cargar el modelo SVM
+# Cargar el modelo SVM y los datos de normalización
 clf = load('models/model_svc.joblib')
 mean_train = np.load('datasets/mean_train.npy')
 std_train = np.load('datasets/std_train.npy')
@@ -49,18 +49,23 @@ def segment_digits(image):
             digit = image[y:y+h, x:x+w]
             digit = cv2.resize(digit, (64, 64), interpolation=cv2.INTER_AREA)
             digit = digit.astype('float32') / 255
-            digit = digit.reshape(-1)
+            digit = digit.reshape(1, -1)  # Asegurar que el dígito tenga la forma correcta
             digits.append(digit)
             positions.append((x, y, w, h))
+    if digits:
+        digits = np.vstack(digits)  # Convertir lista de matrices en una sola matriz
     return digits, positions
 
 # Reconocer dígitos en la imagen
 def recognize_digits(digits, mean, std, eigenvectors):
     predictions = []
-    if digits:
-        normalized_digits = normalize_data(np.array(digits), mean, std)
+    if digits.size > 0:
+        normalized_digits = normalize_data(digits, mean, std)
         projected_digits = project_data(normalized_digits, eigenvectors)
-        predictions = clf.predict(projected_digits)
+        if projected_digits.shape[1] == eigenvectors.shape[1]:  # Asegurar que el tamaño de las características coincida
+            predictions = clf.predict(projected_digits)
+        else:
+            print(f"Error: número de características proyectadas {projected_digits.shape[1]} no coincide con las esperadas {eigenvectors.shape[1]}")
     return predictions
 
 # Inicializar la captura de video desde la cámara
@@ -120,3 +125,4 @@ while True:
 # Liberar la captura de video y cerrar todas las ventanas
 cap.release()
 cv2.destroyAllWindows()
+    
