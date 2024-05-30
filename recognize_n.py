@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 from joblib import load
-from sklearn.preprocessing import StandardScaler
 
 # Cargar el modelo SVM y el scaler
 clf = load('models/svm_digit_classifier.joblib')

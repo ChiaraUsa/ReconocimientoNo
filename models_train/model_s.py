@@ -7,8 +7,8 @@ from sklearn.svm import SVC
 from joblib import dump
 
 # Cargar los datos
-X = np.load('datasets/X.npy')
-Y = np.load('datasets/Y.npy')
+X = np.load('../datasets/X.npy')
+Y = np.load('../datasets/Y.npy')
 
 # Normalizar las imágenes
 x_scaled = X / 255
@@ -63,10 +63,11 @@ X_train_recovered = np.dot(X_train_reduced, selected_eigenvectors.T) * std_train
 model_svc = SVC()
 model_svc.fit(X_train_reduced, y_train)
 
-# Guardar el modelo
-dump(model_svc, 'models/model_svc.joblib')
-np.save('datasets/mean_train.npy', mean_train)
-np.save('datasets/std_train.npy', std_train)
+# Guardar el modelo y los componentes PCA
+dump(model_svc, '../models/model_svc.joblib')
+np.save('../datasets/mean_train.npy', mean_train)
+np.save('../datasets/std_train.npy', std_train)
+np.save('../datasets/eigenvectors.npy', selected_eigenvectors)
 
 # Hacer predicciones y calcular la precisión
 y_pred = model_svc.predict(X_test_reduced)
