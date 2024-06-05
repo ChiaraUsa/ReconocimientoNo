@@ -32,4 +32,4 @@ dump(classifier, "../models/digit_recognizer")
 prediction=classifier.predict(test_data)
 
 print(f"Classification report for classifier {classifier}:\n"
-      f"{metrics.classification_report(test_labels, prediction)}\n")
+      f"{metrics.classification_report(test_labels, prediction)}\n")        
