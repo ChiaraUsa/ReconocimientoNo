@@ -1,7 +1,7 @@
 import cv2
-import numpy as np
 from joblib import load
-from sklearn.preprocessing import StandardScaler
+import warnings
+warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
 # Cargar el modelo y el escalador
 model = load('../models/digit_recognizer')

@@ -1,4 +1,5 @@
-from sklearn import svm, metrics
+from sklearn import metrics
+from sklearn.svm import SVC
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -41,15 +42,15 @@ train_data_pca, pca_model = pca(train_data)
 test_data_pca = pca_model.transform(test_data)
 
 # Entrenar el modelo SVM
-svc = svm.SVC(gamma='scale', class_weight='balanced', C=100)
-svc.fit(train_data_pca, train_labels)
+classifier=SVC(kernel="linear", random_state=6)
+classifier.fit(train_data_pca,train_labels)
 
 # Guardar el modelo entrenado y los componentes PCA
-dump(svc, '../models/svm_digit_classifier_pca.joblib')
+dump(classifier, '../models/svc_digit_classifier_pca.joblib')
 
 # Realizar predicciones en el conjunto de prueba
-predicted = svc.predict(test_data_pca)
+predicted = classifier.predict(test_data_pca)
 
 # Imprimir el reporte de clasificación
-print(f"Classification report for classifier {svc}:\n"
+print(f"Classification report for classifier {classifier}:\n"
       f"{metrics.classification_report(test_labels, predicted)}\n")
