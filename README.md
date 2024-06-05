@@ -7,20 +7,6 @@ Este proyecto implementa un sistema de reconocimiento de dígitos utilizando una
 - Mitchell Bermin.
 - Oscar Miranda.
 
-## Estructura del Proyecto
-
-```plaintext
-ReconocimientoNo/
-├── test_recognition.py
-├── .gitignore
-├── algorithm.py
-├── camara.py
-├── model.py
-├── recognize_n.py
-├── requirements.txt
-└── README.md
-```
-
 ## Instalación
 
 ### Prerrequisitos
