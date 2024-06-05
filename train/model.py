@@ -30,4 +30,6 @@ classifier.fit(train_data,train_labels)
 dump(classifier, "../models/digit_recognizer")
 
 prediction=classifier.predict(test_data)
-print("Accuracy= ",metrics.accuracy_score(prediction, test_labels))
+
+print(f"Classification report for classifier {classifier}:\n"
+      f"{metrics.classification_report(test_labels, prediction)}\n")
