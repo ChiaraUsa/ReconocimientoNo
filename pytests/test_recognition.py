@@ -2,7 +2,7 @@ import numpy as np
 from joblib import load
 from sklearn.preprocessing import StandardScaler
 from sklearn import svm, metrics
-from train.model import fetch_data, pca,compute_covariance_matrix
+from train.model_pca import fetch_data, pca,compute_covariance_matrix
 import pytest
 
 def test_compute_covariance_matrix():
