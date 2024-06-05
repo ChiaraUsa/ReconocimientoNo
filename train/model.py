@@ -29,8 +29,8 @@ def pca(X, variance_threshold=0.95):
     covariance_matrix = compute_covariance_matrix(X)
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     sorted_indices = np.argsort(eigenvalues)[::-1]
-    eigenvalues = eigenvalues[sorted_indices]
-    eigenvectors = eigenvectors[:, sorted_indices]
+    eigenvalues = np.real(eigenvalues[sorted_indices])
+    eigenvectors = np.real(eigenvectors[:, sorted_indices])
     explained_variance_ratio = eigenvalues / np.sum(eigenvalues)
     cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
     d = np.argmax(cumulative_variance_ratio >= variance_threshold) + 1
@@ -46,15 +46,15 @@ test_data_pca = np.dot(test_data, selected_eigenvectors)
 scaler = StandardScaler()
 train_data_pca = scaler.fit_transform(train_data_pca)
 test_data_pca = scaler.transform(test_data_pca)
-dump(scaler, 'models/scaler_pca.joblib')
+dump(scaler, '../models/scaler_pca.joblib')
 
 # Entrenar el modelo SVM
 svc = svm.SVC(gamma='scale', class_weight='balanced', C=100)
 svc.fit(train_data_pca, train_labels)
 
 # Guardar el modelo entrenado y los componentes PCA
-dump(svc, 'models/svm_digit_classifier_pca.joblib')
-np.save('models/selected_eigenvectors.npy', selected_eigenvectors)
+dump(svc, '../models/svm_digit_classifier_pca.joblib')
+np.save('../models/selected_eigenvectors.npy', selected_eigenvectors)
 
 # Realizar predicciones en el conjunto de prueba
 predicted = svc.predict(test_data_pca)
