@@ -2,7 +2,6 @@ from sklearn import metrics
 from sklearn.svm import SVC
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 from joblib import dump
 from sklearn.datasets import fetch_openml
 from sklearn.utils import check_random_state
@@ -31,7 +30,7 @@ def compute_covariance_matrix(X):
 
 def pca(X, variance_threshold=0.95):
     X_centered = X - np.mean(X, axis=0)
-    covariance_matrix = np.cov(X_centered, rowvar=False)
+    covariance_matrix = compute_covariance_matrix(X)
     eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)
     sorted_index = np.argsort(eigenvalues)[::-1]
     sorted_eigenvalues = eigenvalues[sorted_index]
