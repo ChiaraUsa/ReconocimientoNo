@@ -5,7 +5,7 @@ import warnings
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
 # Cargar el modelo SVM, el scaler y el modelo PCA
-clf = load('../models/svm_digit_classifier_pca.joblib')
+clf = load('../models/svc_digit_classifier_pca.joblib')
 scaler = load('../models/scaler.joblib')
 pca_model = load('../models/pca.joblib')
 
