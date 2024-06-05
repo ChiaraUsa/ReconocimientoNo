@@ -1,10 +1,12 @@
 import cv2
 import numpy as np
 from joblib import load
+import warnings
+warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
 # Cargar el modelo SVM y el scaler
-clf = load('models/svm_digit_classifier.joblib')
-scaler = load('models/scaler.joblib')
+clf = load('svm_digit_classifier.joblib')
+scaler = load('scaler.joblib')
 
 def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -18,11 +20,14 @@ def segment_digits(image):
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         if w > 5 and h > 5:
+            
             digit = image[y:y+h, x:x+w]
-            digit = cv2.resize(digit, (8, 8), interpolation=cv2.INTER_AREA)
+            digit = cv2.resize(digit, (28, 28), interpolation=cv2.INTER_AREA)
             digit = digit.astype('float32') / 255
+            cv2.imshow('frame2', digit)
             digit = digit.reshape(1, -1)  # Ajustar a 2D
             digits.append(digit)
+            
             positions.append((x, y, w, h))
     return digits, positions
 
@@ -62,7 +67,7 @@ while True:
     processed_image = preprocess_image(roi)
     digits, positions = segment_digits(processed_image)
     
-    print(f"Número de dígitos segmentados: {len(digits)}")
+    #print(f"Número de dígitos segmentados: {len(digits)}")
 
     if digits:
         recognized_digits = recognize_digits(digits, scaler)
