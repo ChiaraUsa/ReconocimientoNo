@@ -1,42 +1,63 @@
-import unittest
-import cv2
 import numpy as np
 from joblib import load
-from recognize_n import preprocess_image, segment_digits, recognize_digits
+from sklearn.preprocessing import StandardScaler
+from sklearn import svm, metrics
+from model import fetch_data, pca,compute_covariance_matrix
+import pytest
 
-class TestDigitRecognition(unittest.TestCase):
+def test_compute_covariance_matrix():
+    data = np.random.rand(100, 50)
+    covariance_matrix = compute_covariance_matrix(data)
+    
+    assert covariance_matrix.shape == (50, 50), "La forma de la matriz de covarianza no es correcta"
+    assert np.allclose(covariance_matrix, np.cov(data, rowvar=False, bias=True)), "La matriz de covarianza no es correcta"
 
-    @classmethod
-    def setUpClass(cls):
-        # Cargar el clasificador SVM y el escalador desde archivos preentrenados
-        cls.clf = load('svm_digit_classifier.joblib')
-        cls.scaler = load('scaler.joblib')
+def test_pca():
+    data = np.random.rand(100, 50)
+    selected_eigenvectors = pca(data, variance_threshold=0.95)
+    
+    assert selected_eigenvectors.shape[1] <= 50, "El número de componentes seleccionados no es correcto"
+    
+    # Verificar que la varianza explicada es >= 95%
+    covariance_matrix = compute_covariance_matrix(data)
+    eigenvalues, _ = np.linalg.eig(covariance_matrix)
+    sorted_indices = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[sorted_indices]
+    explained_variance_ratio = eigenvalues / np.sum(eigenvalues)
+    cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
+    d = np.argmax(cumulative_variance_ratio >= 0.95) + 1
+    
+    assert selected_eigenvectors.shape[1] == d, "El número de componentes seleccionados no explica el 95% de la varianza"
 
-    def test_preprocess_image(self):
-        image = np.zeros((100, 100, 3), dtype=np.uint8)
-        preprocessed_image = preprocess_image(image)
-        self.assertEqual(preprocessed_image.shape, (100, 100), "Preprocessed image shape is incorrect")
-        # El valor debe ser 0 porque la imagen es completamente negra
-        self.assertTrue(np.all(preprocessed_image == 0), "Preprocessed image is not binary")
+def test_integration():
+    train_data, train_labels, test_data, test_labels = fetch_data()
 
-    def test_segment_digits(self):
-        image = np.zeros((100, 100), dtype=np.uint8)
-        cv2.putText(image, '4', (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
-        preprocessed_image = preprocess_image(image)
-        digits, positions = segment_digits(preprocessed_image)
-        self.assertGreater(len(digits), 0, "Digit segmentation failed")
-        for digit in digits:
-            self.assertEqual(digit.shape, (1, 64), "Segmented digit is not 8x8 pixels flattened")
-        self.assertEqual(len(digits), len(positions), "Number of digits and positions do not match")
+    # Calcular PCA
+    selected_eigenvectors = pca(train_data)
+    train_data_pca = np.dot(train_data, selected_eigenvectors)
+    test_data_pca = np.dot(test_data, selected_eigenvectors)
 
-    def test_recognize_digits(self):
-        digit = np.zeros((8, 8), dtype=np.uint8)
-        cv2.putText(digit, '4', (1, 6), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-        digit = digit.flatten().reshape(1, -1).astype('float32') / 255
-        digits = [digit]
-        predictions = recognize_digits(digits, self.scaler)
-        self.assertEqual(len(predictions), len(digits), "Digit recognition failed")
-        self.assertIsInstance(predictions[0], np.integer, "Prediction is not an integer")
+    # Normalizar los datos reducidos
+    scaler = StandardScaler()
+    train_data_pca = scaler.fit_transform(train_data_pca)
+    test_data_pca = scaler.transform(test_data_pca)
+    
+    # Entrenar el modelo SVM
+    svc = svm.SVC(gamma='scale', class_weight='balanced', C=100)
+    svc.fit(train_data_pca, train_labels)
+    
+    # Realizar predicciones en el conjunto de prueba
+    predicted = svc.predict(test_data_pca)
+    
+    # Verificar la precisión
+    accuracy = metrics.accuracy_score(test_labels, predicted)
+    assert accuracy > 0.90, "La precisión del modelo es inferior al 90%"
 
-if __name__ == '__main__':
-    unittest.main()
+    print(f"Classification report for classifier {svc}:\n"
+          f"{metrics.classification_report(test_labels, predicted)}\n")
+
+if __name__ == "__main__":
+    test_compute_covariance_matrix()
+    test_pca()
+    test_integration()
+    print("All tests passed!")

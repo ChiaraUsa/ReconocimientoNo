@@ -4,9 +4,10 @@ from joblib import load
 import warnings
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
-# Cargar el modelo SVM y el scaler
-clf = load('svm_digit_classifier.joblib')
-scaler = load('scaler.joblib')
+# Cargar el modelo SVM, el scaler y los autovectores PCA
+clf = load('models_train/svm_digit_classifier_pca.joblib')
+scaler = load('models_train/scaler_pca.joblib')
+selected_eigenvectors = np.load('models_train/selected_eigenvectors.npy')
 
 def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -20,23 +21,22 @@ def segment_digits(image):
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         if w > 5 and h > 5:
-            
             digit = image[y:y+h, x:x+w]
             digit = cv2.resize(digit, (28, 28), interpolation=cv2.INTER_AREA)
             digit = digit.astype('float32') / 255
             cv2.imshow('frame2', digit)
             digit = digit.reshape(1, -1)  # Ajustar a 2D
             digits.append(digit)
-            
             positions.append((x, y, w, h))
     return digits, positions
 
-def recognize_digits(digits, scaler):
+def recognize_digits(digits, scaler, eigenvectors):
     predictions = []
     if digits:
         digits_array = np.array(digits).reshape(len(digits), -1)
         standardized_digits = scaler.transform(digits_array)
-        predictions = clf.predict(standardized_digits)
+        projected_digits = np.dot(standardized_digits, eigenvectors)
+        predictions = clf.predict(projected_digits)
     return predictions
 
 # Inicializar la captura de video desde la cámara
@@ -51,7 +51,7 @@ ret, frame = cap.read()
 height, width, _ = frame.shape
 
 # Definir la región de interés (ROI)
-roi_size = 100
+roi_size = 200
 roi_top_left = ((width - roi_size) // 2, (height - roi_size) // 2)
 roi_bottom_right = ((width + roi_size) // 2, (height + roi_size) // 2)
 
@@ -67,10 +67,8 @@ while True:
     processed_image = preprocess_image(roi)
     digits, positions = segment_digits(processed_image)
     
-    #print(f"Número de dígitos segmentados: {len(digits)}")
-
     if digits:
-        recognized_digits = recognize_digits(digits, scaler)
+        recognized_digits = recognize_digits(digits, scaler, selected_eigenvectors)
 
         for idx, (digit, (x, y, w, h)) in enumerate(zip(recognized_digits, positions)):
             cv2.putText(frame, f'{digit}', (x + roi_top_left[0], y + roi_top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
