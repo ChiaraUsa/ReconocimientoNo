@@ -5,19 +5,7 @@ __pycache__/
 *.pyo
 
 # Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
 .pytest_cache/
-cover/
 
 # Environments
 .env
@@ -91,10 +79,6 @@ venv.bak/
 *.pyo
 *.pyd
 *.pyp
-
-# Machine learning models
-*.model
-*.joblib
 
 # DS_Store
 .DS_Store
