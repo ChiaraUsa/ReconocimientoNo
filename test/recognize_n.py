@@ -24,6 +24,7 @@ def segment_digits(image):
             digit = image[y:y+h, x:x+w]
             digit = cv2.resize(digit, (28, 28), interpolation=cv2.INTER_AREA)
             digit = digit.astype('float32') / 255
+            cv2.imshow('frame2', digit)
             digit = digit.reshape(1, -1)  # Ajustar a 2D
             digits.append(digit)
             positions.append((x, y, w, h))
