@@ -7,7 +7,7 @@ Este repositorio contiene la implementación de un sistema de reconocimiento de 
 - Mitchell Bermin.
 - Oscar Miranda.
   
-## Table of Contents
+## Tabla de Contenidos
 
 - [Descripción general](#Descripción-general)
 - [Características](#Características)
