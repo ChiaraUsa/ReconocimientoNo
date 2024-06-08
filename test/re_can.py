@@ -99,11 +99,13 @@ while ret:
             cv2.line(paintWindow, points[j][k - 1], points[j][k], color, 2)
 
     # Predict digit from the drawn image
-    if index > 0 and len(points[index - 1]) > 1:
-        bbox_size = (200, 200)
-        bbox = [(int(x // 2 - bbox_size[0] // 2), int(y // 2 - bbox_size[1] // 2)),
-                (int(x // 2 + bbox_size[0] // 2), int(y // 2 + bbox_size[1] // 2))]
+    bbox_size = (200, 200)
+    bbox = [(int(636 // 2 - bbox_size[0] // 2), int(471 // 2 - bbox_size[1] // 2)),
+            (int(636 // 2 + bbox_size[0] // 2), int(471 // 2 + bbox_size[1] // 2))]
 
+    cv2.rectangle(paintWindow, bbox[0], bbox[1], (0, 255, 0), 2)
+
+    if index > 0 and len(points[index - 1]) > 1:
         img_cropped = paintWindow[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
         img_cropped = np.array(img_cropped, dtype=np.uint8)  # Ensure the image is in uint8 format
         img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
@@ -111,9 +113,14 @@ while ret:
 
         digit = prediction(thresh, model, scaler)
 
-        # Add digit prediction to frame
-        cv2.putText(frame, f'Digit: {digit}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    
+        # Add digit prediction to paint window
+        cv2.putText(paintWindow, f'Digit: {digit}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+        # Display for a short time and then clear the text
+        cv2.imshow("Paint", paintWindow)
+        cv2.waitKey(500)  # Display the prediction for 500 ms
+        paintWindow[50:90, 50:200] = 255  # Clear the text area
+
     cv2.imshow("Output", frame)
     cv2.imshow("Paint", paintWindow)
 
