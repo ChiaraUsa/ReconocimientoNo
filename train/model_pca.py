@@ -118,7 +118,7 @@ classifier.fit(train_data_pca, train_labels)
 
 # Guardar el modelo entrenado y los componentes PCA
 dump(classifier, '../models/svc_digit_classifier_pca.joblib')
-dump(pca_eigenvectors, "../models/pca_eigenvectors.npy")
+np.save('../models/pca_eigenvectors.npy', pca_eigenvectors)
 
 # Realizar predicciones en el conjunto de prueba
 predicted = classifier.predict(test_data_pca)

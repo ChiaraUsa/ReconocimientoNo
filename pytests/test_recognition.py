@@ -1,3 +1,4 @@
+# Importación de Módulos
 import numpy as np
 from joblib import load
 from sklearn.preprocessing import StandardScaler
@@ -6,6 +7,29 @@ from train.model_pca import fetch_data, pca,compute_covariance_matrix
 import pytest
 
 def test_compute_covariance_matrix():
+    """
+    Prueba la función compute_covariance_matrix.
+
+    Esta prueba verifica que la función compute_covariance_matrix calcule correctamente la matriz
+    de covarianza para un conjunto de datos generado aleatoriamente. La función verifica dos
+    condiciones:
+    1. Que la forma de la matriz de covarianza es correcta.
+    2. Que los valores en la matriz de covarianza calculada coinciden con los valores esperados
+       usando la función np.cov.
+
+    Pasos de la prueba:
+    -------------------
+    1. Generar un conjunto de datos aleatorio con dimensiones 100 x 50.
+    2. Calcular la matriz de covarianza utilizando la función compute_covariance_matrix.
+    3. Verificar que la matriz de covarianza tiene la forma correcta (50 x 50).
+    4. Verificar que los valores en la matriz de covarianza calculada son equivalentes a los valores
+       calculados usando np.cov con los mismos datos, ignorando pequeñas diferencias numéricas.
+
+    Excepciones:
+    ------------
+    AssertionError: Si alguna de las condiciones de la prueba no se cumple.
+
+    """
     data = np.random.rand(100, 50)
     covariance_matrix = compute_covariance_matrix(data)
     
@@ -13,6 +37,33 @@ def test_compute_covariance_matrix():
     assert np.allclose(covariance_matrix, np.cov(data, rowvar=False, bias=True)), "La matriz de covarianza no es correcta"
 
 def test_pca():
+    """
+    Prueba la función pca.
+
+    Esta prueba verifica que la función pca reduzca correctamente la dimensionalidad de un conjunto
+    de datos generado aleatoriamente y que los componentes principales seleccionados expliquen al
+    menos el 95% de la varianza total.
+
+    Pasos de la prueba:
+    -------------------
+    1. Generar un conjunto de datos aleatorio con dimensiones 100 x 50.
+    2. Aplicar PCA al conjunto de datos con un umbral de varianza acumulada del 95%.
+    3. Verificar que el número de componentes seleccionados no excede el número de características
+       originales (50).
+    4. Calcular la matriz de covarianza del conjunto de datos.
+    5. Calcular los valores propios y vectores propios de la matriz de covarianza.
+    6. Ordenar los valores propios en orden descendente.
+    7. Calcular la proporción de varianza explicada por cada componente principal.
+    8. Calcular la varianza acumulada y determinar el número de componentes necesarios para
+       alcanzar al menos el 95% de la varianza.
+    9. Verificar que el número de componentes seleccionados por la función pca coincide con el
+       número calculado.
+
+    Excepciones:
+    ------------
+    AssertionError: Si alguna de las condiciones de la prueba no se cumple.
+
+    """
     data = np.random.rand(100, 50)
     selected_eigenvectors = pca(data, variance_threshold=0.95)
     
@@ -30,6 +81,31 @@ def test_pca():
     assert selected_eigenvectors.shape[1] == d, "El número de componentes seleccionados no explica el 95% de la varianza"
 
 def test_integration():
+    """
+    Prueba de integración completa para el flujo de trabajo de PCA y SVM.
+
+    Esta prueba verifica la correcta integración de las funciones de preprocesamiento de datos,
+    reducción de dimensionalidad mediante PCA, escalado de características y entrenamiento de un
+    modelo SVM. La prueba asegura que el modelo entrenado tenga una precisión aceptable en el
+    conjunto de datos de prueba.
+
+    Pasos de la prueba:
+    -------------------
+    1. Obtener los datos de entrenamiento y prueba utilizando la función fetch_data.
+    2. Aplicar PCA al conjunto de datos de entrenamiento para reducir la dimensionalidad.
+    3. Transformar el conjunto de datos de prueba utilizando los componentes principales obtenidos
+       del conjunto de entrenamiento.
+    4. Normalizar los datos reducidos utilizando StandardScaler.
+    5. Entrenar un modelo SVM con los datos de entrenamiento reducidos y normalizados.
+    6. Realizar predicciones en el conjunto de datos de prueba.
+    7. Verificar que la precisión del modelo en el conjunto de datos de prueba sea superior al 90%.
+    8. Imprimir el informe de clasificación del modelo.
+
+    Excepciones:
+    ------------
+    AssertionError: Si la precisión del modelo es inferior al 90%.
+
+    """
     train_data, train_labels, test_data, test_labels = fetch_data()
 
     # Calcular PCA
@@ -56,6 +132,7 @@ def test_integration():
     print(f"Classification report for classifier {svc}:\n"
           f"{metrics.classification_report(test_labels, predicted)}\n")
 
+# Ejecución de las Pruebas
 if __name__ == "__main__":
     test_compute_covariance_matrix()
     test_pca()

@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", message="X does not have valid feature names")
 # Cargar el modelo SVM, el scaler y los autovectores PCA
 clf = load('../models/svc_digit_classifier_pca.joblib')
 scaler = load('../models/scaler_pca.joblib')
-pca_eigenvectors = np.load('../models/pca_eigenvectors.npy', allow_pickle=True)
+pca_eigenvectors = np.load('../models/pca_eigenvectors.npy')
 
 def preprocess_image(image):
     """
