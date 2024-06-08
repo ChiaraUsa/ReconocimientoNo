@@ -1,11 +1,13 @@
 # Importaciones necesarias
-from sklearn import metrics
+from sklearn import metrics, precision_recall_curve
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from joblib import dump
 from sklearn.datasets import fetch_openml
 from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import numpy as np
 
 #Función para obtener los datos
 def fetch_data(test_size=10000, randomize=False, standardize=True):
@@ -78,4 +80,45 @@ prediction=classifier.predict(test_data)
 
 # Imprimir un informe de clasificación que incluye métricas como precisión, recall y f1-score.
 print(f"Classification report for classifier {classifier}:\n"
-      f"{metrics.classification_report(test_labels, prediction)}\n")        
+      f"{metrics.classification_report(test_labels, prediction)}\n")  
+
+# Calcular las probabilidades de decisión
+decision_function = classifier.decision_function(test_data)
+
+# Curva de Precisión-Exhaustividad
+precision, recall, _ = precision_recall_curve(test_labels, decision_function)
+plt.figure()
+plt.plot(recall, precision, lw=2, color='b', label='Precision-Recall curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Precision-Recall Curve')
+plt.legend(loc='best')
+plt.show()      
+
+# Obtener los coeficientes del hiperplano
+w = classifier.coef_[0]
+slope = -w[0] / w[1]
+intercept = -classifier.intercept_[0] / w[1]
+
+# Crear una línea para el hiperplano de decisión
+xx = np.linspace(min(train_data[:, 0]), max(train_data[:, 0]))
+yy = slope * xx + intercept
+
+# Crear márgenes (paralelos al hiperplano de decisión)
+margin = 1 / np.sqrt(np.sum(classifier.coef_ ** 2))
+yy_down = yy - np.sqrt(1 + slope ** 2) * margin
+yy_up = yy + np.sqrt(1 + slope ** 2) * margin
+
+# Plotear los datos y los hiperplanos
+plt.scatter(train_data[:, 0], train_data[:, 1], c=train_labels, cmap='coolwarm', s=30)
+plt.plot(xx, yy, 'k-')
+plt.plot(xx, yy_down, 'k--')
+plt.plot(xx, yy_up, 'k--')
+
+# Resaltar los vectores de soporte
+plt.scatter(classifier.support_vectors_[:, 0], classifier.support_vectors_[:, 1], s=100, facecolors='none', edgecolors='k')
+
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.title('SVM with Linear Kernel')
+plt.show()

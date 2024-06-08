@@ -12,3 +12,4 @@ tensorflow==2.16.1
 tensorflow-intel==2.16.1
 urllib3==2.2.1
 mediapipe==0.10.14
+matplotlib==3.9.0
