@@ -100,11 +100,12 @@ while ret:
 
     # Predict digit from the drawn image
     if index > 0 and len(points[index - 1]) > 1:
-        bbox_size = (100, 100)
+        bbox_size = (200, 200)
         bbox = [(int(x // 2 - bbox_size[0] // 2), int(y // 2 - bbox_size[1] // 2)),
                 (int(x // 2 + bbox_size[0] // 2), int(y // 2 + bbox_size[1] // 2))]
 
         img_cropped = paintWindow[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
+        img_cropped = np.array(img_cropped, dtype=np.uint8)  # Ensure the image is in uint8 format
         img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY_INV)
 
