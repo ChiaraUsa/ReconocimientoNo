@@ -4,10 +4,10 @@ from joblib import load
 import warnings
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
-# Cargar el modelo SVM, el scaler y el modelo PCA
+# Cargar el modelo SVM, el scaler y los autovectores PCA
 clf = load('../models/svc_digit_classifier_pca.joblib')
 scaler = load('../models/scaler_pca.joblib')
-pca_model = load('../models/pca.joblib')
+pca_eigenvectors = np.load('../models/pca_eigenvectors.npy', allow_pickle=True)
 
 def preprocess_image(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -30,12 +30,12 @@ def segment_digits(image):
             positions.append((x, y, w, h))
     return digits, positions
 
-def recognize_digits(digits, scaler, pca_model):
+def recognize_digits(digits, scaler, pca_eigenvectors):
     predictions = []
     if digits:
         digits_array = np.array(digits).reshape(len(digits), -1)
         standardized_digits = scaler.transform(digits_array)
-        projected_digits = pca_model.transform(standardized_digits)
+        projected_digits = np.dot(standardized_digits, pca_eigenvectors)
         predictions = clf.predict(projected_digits)
     return predictions
 
@@ -68,7 +68,7 @@ while True:
     digits, positions = segment_digits(processed_image)
     
     if digits:
-        recognized_digits = recognize_digits(digits, scaler, pca_model)
+        recognized_digits = recognize_digits(digits, scaler, pca_eigenvectors)
 
         for idx, (digit, (x, y, w, h)) in enumerate(zip(recognized_digits, positions)):
             cv2.putText(frame, f'{digit}', (x + roi_top_left[0], y + roi_top_left[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)

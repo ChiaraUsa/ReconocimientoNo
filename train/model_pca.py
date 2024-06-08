@@ -20,7 +20,7 @@ def fetch_data(test_size=10000, randomize=False, standardize=True):
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
-        dump(scaler, '../models/scaler_pca.joblib')
+        dump(scaler, '../models/scaler.joblib')
     return X_train, y_train, X_test, y_test
 
 def compute_covariance_matrix(X):
@@ -29,7 +29,7 @@ def compute_covariance_matrix(X):
     return (1 / m) * np.dot(X_centered.T, X_centered)
 
 def pca(X, variance_threshold=0.95):
-    X_centered = X - np.mean(X, axis=0)
+    X_centered = X - np.mean(X, axis=0)  # Centrar los datos
     covariance_matrix = compute_covariance_matrix(X)
     eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)
     sorted_index = np.argsort(eigenvalues)[::-1]
@@ -50,12 +50,12 @@ train_data_pca, pca_eigenvectors = pca(train_data, variance_threshold=0.95)
 test_data_pca = np.dot(test_data - np.mean(train_data, axis=0), pca_eigenvectors)
 
 # Entrenar el modelo SVM
-classifier=SVC(kernel="linear", random_state=6)
-classifier.fit(train_data_pca,train_labels)
+classifier = SVC(kernel="linear", random_state=6)
+classifier.fit(train_data_pca, train_labels)
 
 # Guardar el modelo entrenado y los componentes PCA
 dump(classifier, '../models/svc_digit_classifier_pca.joblib')
-dump(pca_eigenvectors, "../models/pca.joblib")
+dump(pca_eigenvectors, "../models/pca_eigenvectors.npy")
 
 # Realizar predicciones en el conjunto de prueba
 predicted = classifier.predict(test_data_pca)
