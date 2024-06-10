@@ -62,12 +62,13 @@ def fetch_data(test_size=10000, randomize=False, standardize=True):
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
-        dump(scaler, '../models/scaler_op.joblib')
+        dump(scaler, '../models/scaler_opt.joblib')
     return X_train, y_train, X_test, y_test
 
 # Uso de la función fetch_data
 train_data, train_labels, test_data, test_labels = fetch_data()
 
+print('Inicio de data augmentation')
 # Aumento de datos (Data Augmentation)
 datagen = ImageDataGenerator(
     rotation_range=10,
@@ -100,6 +101,8 @@ augmented_images = augmented_images.reshape(-1, 784)
 combined_train_data = np.vstack((train_data, augmented_images))
 combined_train_labels = np.hstack((train_labels, augmented_labels))
 
+print('Inicio de PCA')
+
 # Aplicar PCA y reducir la dimensionalidad automáticamente
 pca = PCA(n_components=0.95)  # Mantener el 95% de la varianza
 combined_train_data_pca = pca.fit_transform(combined_train_data)
@@ -107,6 +110,8 @@ test_data_pca = pca.transform(test_data)
 
 # Guardar el modelo PCA
 dump(pca, '../models/pca_model_auto.joblib')
+
+print('Inicio de Ajuste de hiperparámetros')
 
 # Ajuste de hiperparámetros utilizando búsqueda en cuadrícula
 param_grid = {'C': [0.1, 1, 10, 100], 'kernel': ['linear']}
@@ -118,6 +123,8 @@ best_classifier = grid_search.best_estimator_
 
 # Guardar el mejor modelo
 dump(best_classifier, '../models/best_svc_pca.joblib')
+
+print('Inicio de predicción')
 
 # Realizar predicciones en el conjunto de prueba
 best_predictions = best_classifier.predict(test_data_pca)
