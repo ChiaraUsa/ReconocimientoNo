@@ -1,7 +1,7 @@
 # Importaciones necesarias
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import tensorflow as t
 from sklearn import metrics
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
@@ -70,7 +70,7 @@ train_data, train_labels, test_data, test_labels = fetch_data()
 
 print('Inicio de data augmentation')
 # Aumento de datos (Data Augmentation)
-datagen = ImageDataGenerator(
+datagen = t.keras.preprocessing.imageImageDataGenerator(
     rotation_range=10,
     zoom_range=0.1,
     width_shift_range=0.1,
