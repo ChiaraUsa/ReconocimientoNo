@@ -123,8 +123,8 @@ while True:
             for k in range(1, len(points[j])):
                 if points[j][k - 1] is None or points[j][k] is None:
                     continue
-                cv2.line(frame, points[j][k - 1], points[j][k], color, 2)
-                cv2.line(paintWindow, points[j][k - 1], points[j][k], color, 2)
+                cv2.line(frame, points[j][k - 1], points[j][k], color, 5)  # Grosor de línea aumentado a 5
+                cv2.line(paintWindow, points[j][k - 1], points[j][k], color, 10)  # Grosor de línea aumentado a 5
 
         bbox_size = (200, 200)
         bbox = [(int(636 // 2 - bbox_size[0] // 2), int(471 // 2 - bbox_size[1] // 2)),
