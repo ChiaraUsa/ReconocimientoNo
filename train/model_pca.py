@@ -39,18 +39,22 @@ def fetch_data(test_size=10000, randomize=False, standardize=True):
     y_test : array-like, shape (n_test_samples,)
         Los valores objetivo para la prueba.
     """
+    # Descargar el conjunto de datos MNIST desde OpenML
     X, y = fetch_openml('mnist_784', version=1, return_X_y=True)
     if randomize:
+        # Si randomize es True, barajar las muestras
         random_state = check_random_state(0)
         permutation = random_state.permutation(X.shape[0])
         X = X[permutation]
         y = y[permutation]
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, shuffle=False)
+    # Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
     if standardize:
+        # Si standardize es True, estandarizar las características
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
+        # Guardar el escalador ajustado
         dump(scaler, '../models/scaler_pca.joblib')
     return X_train, y_train, X_test, y_test
 
@@ -94,19 +98,19 @@ def pca(X, variance_threshold=0.95):
     """
     X_centered = X - np.mean(X, axis=0)  # Centrar los datos
     covariance_matrix = compute_covariance_matrix(X)
-    eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)
-    sorted_index = np.argsort(eigenvalues)[::-1]
+    eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)  # Calcular valores y vectores propios
+    sorted_index = np.argsort(eigenvalues)[::-1]  # Ordenar los valores propios en orden descendente
     sorted_eigenvalues = eigenvalues[sorted_index]
     sorted_eigenvectors = eigenvectors[:, sorted_index]
-    explained_variances = sorted_eigenvalues / np.sum(sorted_eigenvalues)
-    cumulative_explained_variance = np.cumsum(explained_variances)
-    n_components = np.argmax(cumulative_explained_variance >= variance_threshold) + 1
-    eigenvector_subset = sorted_eigenvectors[:, 0:n_components]
-    X_reduced = np.dot(eigenvector_subset.transpose(), X_centered.transpose()).transpose()
+    explained_variances = sorted_eigenvalues / np.sum(sorted_eigenvalues)  # Calcular la varianza explicada
+    cumulative_explained_variance = np.cumsum(explained_variances)  # Varianza acumulada
+    n_components = np.argmax(cumulative_explained_variance >= variance_threshold) + 1  # Número de componentes para el umbral de varianza
+    eigenvector_subset = sorted_eigenvectors[:, 0:n_components]  # Subconjunto de vectores propios
+    X_reduced = np.dot(eigenvector_subset.transpose(), X_centered.transpose()).transpose()  # Transformar los datos
     
     return X_reduced, eigenvector_subset
 
-#Uso de la función fetch_data
+# Uso de la función fetch_data para obtener los datos
 train_data, train_labels, test_data, test_labels = fetch_data()
 
 # Aplicar PCA y reducir la dimensionalidad
@@ -130,12 +134,14 @@ print(f"Classification report for classifier {classifier}:\n"
 
 # Calcular la matriz de confusión
 cm = metrics.confusion_matrix(test_labels, predicted)
+# Visualizar la matriz de confusión
 disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classifier.classes_)
 disp.plot()
 plt.savefig('../graphs/confusion_matrix_pca.png')  # Guardar la gráfica
 plt.close()  # Cerrar la figura
 
 n_classes = 10  # Número de clases en MNIST
+# Convertir las etiquetas a formato binarizado
 y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
 
 # Calcular la función de decisión para cada clase
@@ -168,9 +174,9 @@ yy_down = yy - np.sqrt(1 + slope ** 2) * margin
 yy_up = yy + np.sqrt(1 + slope ** 2) * margin
 
 # Convertir las etiquetas de clase a valores numéricos
-unique_labels = train_labels.unique()
+unique_labels = np.unique(train_labels)
 label_to_num = {label: num for num, label in enumerate(unique_labels)}
-numeric_labels = train_labels.map(label_to_num)
+numeric_labels = np.vectorize(label_to_num.get)(train_labels)
 
 # Plotear los datos y los hiperplanos
 plt.scatter(train_data_pca[:, 0], train_data_pca[:, 1], c=numeric_labels, cmap='coolwarm', s=30)

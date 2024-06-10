@@ -1,7 +1,7 @@
 # Importaciones necesarias
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as t
+import tensorflow
 from sklearn import metrics
 from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
@@ -50,47 +50,53 @@ def fetch_data(test_size=10000, randomize=False, standardize=True):
     - Si `standardize` es True, se utiliza `StandardScaler` de `sklearn.preprocessing` para estandarizar las características.
     - El escalador ajustado se guarda en un archivo llamado 'scaler.joblib' en el directorio '../models/'.
     """
+    # Descargar el conjunto de datos MNIST desde OpenML
     X, y = fetch_openml('mnist_784', version=1, return_X_y=True)
     if randomize:
+        # Si randomize es True, barajar las muestras
         random_state = check_random_state(0)
         permutation = random_state.permutation(X.shape[0])
         X = X[permutation]
         y = y[permutation]
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, shuffle=False)
+    # Dividir los datos en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, shuffle=False)
     if standardize:
+        # Si standardize es True, estandarizar las características
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
+        # Guardar el escalador ajustado
         dump(scaler, '../models/scaler_opt.joblib')
     return X_train, y_train, X_test, y_test
 
-# Uso de la función fetch_data
+# Uso de la función fetch_data para obtener los datos
 train_data, train_labels, test_data, test_labels = fetch_data()
 
 print('Inicio de data augmentation')
-# Aumento de datos (Data Augmentation)
-datagen = t.keras.preprocessing.imageImageDataGenerator(
-    rotation_range=10,
-    zoom_range=0.1,
-    width_shift_range=0.1,
-    height_shift_range=0.1
+# Aumento de datos (Data Augmentation) utilizando ImageDataGenerator de Keras
+datagen = tensorflow.keras.preprocessing.image.ImageDataGenerator(
+    rotation_range=10,      # Rango de rotación aleatoria
+    zoom_range=0.1,         # Rango de zoom aleatorio
+    width_shift_range=0.1,  # Rango de desplazamiento horizontal aleatorio
+    height_shift_range=0.1  # Rango de desplazamiento vertical aleatorio
 )
 
 # Aplicar el aumento de datos al conjunto de entrenamiento
-train_data_augmented = train_data.reshape(-1, 28, 28, 1)
-datagen.fit(train_data_augmented)
+train_data_augmented = train_data.reshape(-1, 28, 28, 1)  # Reformatear los datos para el generador de imágenes
+datagen.fit(train_data_augmented)  # Ajustar el generador de imágenes a los datos de entrenamiento
 
 # Generar datos aumentados
 augmented_images = []
 augmented_labels = []
 
+# Generar un lote de datos aumentados
 for i, (X_batch, y_batch) in enumerate(datagen.flow(train_data_augmented, train_labels, batch_size=60000)):
-    if i > 0:
+    if i > 0:  # Solo queremos un lote de datos aumentados
         break
     augmented_images.append(X_batch)
     augmented_labels.append(y_batch)
 
+# Concatenar los datos aumentados en matrices numpy
 augmented_images = np.concatenate(augmented_images, axis=0)
 augmented_labels = np.concatenate(augmented_labels, axis=0)
 
@@ -103,22 +109,22 @@ combined_train_labels = np.hstack((train_labels, augmented_labels))
 
 print('Inicio de PCA')
 
-# Aplicar PCA y reducir la dimensionalidad automáticamente
-pca = PCA(n_components=0.95)  # Mantener el 95% de la varianza
+# Aplicar PCA y reducir la dimensionalidad automáticamente manteniendo el 95% de la varianza
+pca = PCA(n_components=0.95)
 combined_train_data_pca = pca.fit_transform(combined_train_data)
 test_data_pca = pca.transform(test_data)
 
-# Guardar el modelo PCA
+# Guardar el modelo PCA ajustado
 dump(pca, '../models/pca_model_auto.joblib')
 
 print('Inicio de Ajuste de hiperparámetros')
 
 # Ajuste de hiperparámetros utilizando búsqueda en cuadrícula
-param_grid = {'C': [0.1, 1, 10, 100], 'kernel': ['linear']}
-grid_search = GridSearchCV(SVC(), param_grid, cv=5)
-grid_search.fit(combined_train_data_pca, combined_train_labels)
+param_grid = {'C': [0.1, 1, 10, 100], 'kernel': ['linear']}  # Definir el espacio de parámetros
+grid_search = GridSearchCV(SVC(), param_grid, cv=5)  # Configurar la búsqueda en cuadrícula con validación cruzada
+grid_search.fit(combined_train_data_pca, combined_train_labels)  # Ajustar el modelo
 
-# Obtener el mejor modelo
+# Obtener el mejor modelo encontrado por la búsqueda en cuadrícula
 best_classifier = grid_search.best_estimator_
 
 # Guardar el mejor modelo
@@ -135,9 +141,10 @@ print(f"Classification report for the best classifier {best_classifier}:\n"
 
 # Calcular la matriz de confusión
 cm = metrics.confusion_matrix(test_labels, best_predictions)
+# Visualizar la matriz de confusión
 disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_classifier.classes_)
 disp.plot()
-plt.savefig('../graphs/confusion_matrix_opt.png')  # Guardar la gráfica
+plt.savefig('../graphs/confusion_matrix_opt.png')  # Guardar la gráfica de la matriz de confusión
 plt.close()  # Cerrar la figura
 
 # Calcular las probabilidades de decisión

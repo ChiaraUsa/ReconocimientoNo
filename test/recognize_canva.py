@@ -1,3 +1,4 @@
+# Importaciones necesarias
 import cv2
 import numpy as np
 import mediapipe as mp
@@ -5,23 +6,24 @@ from collections import deque
 from joblib import load
 import warnings
 
+# Ignorar advertencias específicas para una mejor legibilidad
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
-# Giving different arrays to handle colour points
+# Asignar diferentes arrays para manejar puntos de color
 points = [deque(maxlen=1024)]
 index = 0
 
-# The kernel to be used for dilation purpose
+# El kernel a utilizar para el propósito de dilatación
 kernel = np.ones((5, 5), np.uint8)
 
-# Setting color to black
+# Establecer el color a negro
 color = (0, 0, 0)
 
-# Load the model and scaler
+# Cargar el modelo y el escalador
 model = load('../models/digit_recognizer')
 scaler = load('../models/scaler.joblib')
 
-# Function to predict digit
+# Función para predecir el dígito
 def prediction(image, model, scaler):
     img = cv2.resize(image, (28, 28))
     img = img.flatten().reshape(1, -1)
@@ -29,37 +31,38 @@ def prediction(image, model, scaler):
     predict = model.predict(img)
     return predict[0]
 
-# Here is code for Canvas setup
-paintWindow = np.zeros((471, 636, 3)) + 255
-paintWindow = cv2.rectangle(paintWindow, (40, 1), (140, 65), (0, 0, 0), 2)
-cv2.putText(paintWindow, "CLEAR", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
-cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
+# Configuración de la ventana de dibujo (canvas)
+paintWindow = np.zeros((471, 636, 3)) + 255  # Crear una ventana blanca
+paintWindow = cv2.rectangle(paintWindow, (40, 1), (140, 65), (0, 0, 0), 2)  # Dibujar un rectángulo en la ventana
+cv2.putText(paintWindow, "CLEAR", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)  # Añadir texto "CLEAR"
+cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)  # Crear una ventana de OpenCV llamada 'Paint'
 
-# initialize mediapipe
+# Inicializar Mediapipe
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mpDraw = mp.solutions.drawing_utils
 
-# Initialize the webcam
+# Inicializar la webcam
 cap = cv2.VideoCapture(0)
 ret = True
 while ret:
-    # Read each frame from the webcam
+    # Leer cada frame desde la webcam
     ret, frame = cap.read()
 
     x, y, c = frame.shape
 
-    # Flip the frame vertically
+    # Voltear el frame verticalmente
     frame = cv2.flip(frame, 1)
-    framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convertir a RGB
 
+    # Dibujar un rectángulo y añadir texto "CLEAR" en el frame
     frame = cv2.rectangle(frame, (40, 1), (140, 65), (0, 0, 0), 2)
     cv2.putText(frame, "CLEAR", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
 
-    # Get hand landmark prediction
+    # Obtener la predicción de los puntos de referencia de la mano
     result = hands.process(framergb)
 
-    # post process the result
+    # Postprocesar el resultado
     if result.multi_hand_landmarks:
         landmarks = []
         for handslms in result.multi_hand_landmarks:
@@ -69,18 +72,18 @@ while ret:
 
                 landmarks.append([lmx, lmy])
 
-            # Drawing landmarks on frames
+            # Dibujar los puntos de referencia en los frames
             mpDraw.draw_landmarks(frame, handslms, mpHands.HAND_CONNECTIONS)
-        fore_finger = (landmarks[8][0], landmarks[8][1])
+        fore_finger = (landmarks[8][0], landmarks[8][1])  # Coordenadas del dedo índice
         center = fore_finger
-        thumb = (landmarks[4][0], landmarks[4][1])
-        cv2.circle(frame, center, 3, (0, 255, 0), -1)
+        thumb = (landmarks[4][0], landmarks[4][1])  # Coordenadas del pulgar
+        cv2.circle(frame, center, 3, (0, 255, 0), -1)  # Dibujar un círculo en el dedo índice
 
         if (thumb[1] - center[1] < 30):
             points.append(deque(maxlen=512))
             index += 1
         elif center[1] <= 65:
-            if 40 <= center[0] <= 140:  # Clear Button
+            if 40 <= center[0] <= 140:  # Botón de limpieza
                 points = [deque(maxlen=512)]
                 index = 0
                 paintWindow[67:, :, :] = 255
@@ -90,7 +93,7 @@ while ret:
         points.append(deque(maxlen=512))
         index += 1
 
-    # Draw lines on the canvas and frame
+    # Dibujar líneas en el canvas y el frame
     for j in range(len(points)):
         for k in range(1, len(points[j])):
             if points[j][k - 1] is None or points[j][k] is None:
@@ -98,30 +101,30 @@ while ret:
             cv2.line(frame, points[j][k - 1], points[j][k], color, 2)
             cv2.line(paintWindow, points[j][k - 1], points[j][k], color, 2)
 
-    # Draw ROI on paint window
+    # Dibujar ROI en la ventana de pintura
     bbox_size = (200, 200)
     bbox = [(int(636 // 2 - bbox_size[0] // 2), int(471 // 2 - bbox_size[1] // 2)),
             (int(636 // 2 + bbox_size[0] // 2), int(471 // 2 + bbox_size[1] // 2))]
     cv2.rectangle(frame, bbox[0], bbox[1], (0, 255, 0), 2)
 
-    # Save the state of the paint window before showing the digit
+    # Guardar el estado de la ventana de pintura antes de mostrar el dígito
     backup = paintWindow.copy()
 
     if index > 0 and len(points[index - 1]) > 1:
         img_cropped = paintWindow[bbox[0][1]:bbox[1][1], bbox[0][0]:bbox[1][0]]
-        img_cropped = np.array(img_cropped, dtype=np.uint8)  # Ensure the image is in uint8 format
+        img_cropped = np.array(img_cropped, dtype=np.uint8)  # Asegurarse de que la imagen esté en formato uint8
         img_gray = cv2.cvtColor(img_cropped, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(img_gray, 128, 255, cv2.THRESH_BINARY_INV)
 
         digit = prediction(thresh, model, scaler)
 
-        # Add digit prediction to paint window
+        # Añadir la predicción del dígito a la ventana de pintura
         cv2.putText(paintWindow, f'Digit: {digit}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
         cv2.imshow("Paint", paintWindow)
-        cv2.waitKey(500)  # Display the prediction for 500 ms
+        cv2.waitKey(500)  # Mostrar la predicción durante 500 ms
 
-        # Restore the state of the paint window
+        # Restaurar el estado de la ventana de pintura
         paintWindow = backup
 
     cv2.imshow("Output", frame)
@@ -130,6 +133,6 @@ while ret:
     if cv2.waitKey(1) == ord('q'):
         break
 
-# Release the webcam and destroy all active windows
+# Liberar la webcam y destruir todas las ventanas activas
 cap.release()
 cv2.destroyAllWindows()
