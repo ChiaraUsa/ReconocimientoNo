@@ -128,6 +128,13 @@ predicted = classifier.predict(test_data_pca)
 print(f"Classification report for classifier {classifier}:\n"
       f"{metrics.classification_report(test_labels, predicted)}\n")
 
+# Calcular la matriz de confusión
+cm = metrics.confusion_matrix(test_labels, predicted)
+disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classifier.classes_)
+disp.plot()
+plt.savefig('../graphs/confusion_matrix_pca.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
+
 n_classes = 10  # Número de clases en MNIST
 y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
 
@@ -145,7 +152,6 @@ plt.title('Curva Precision-Recall por Clase')
 plt.legend(loc='best')
 plt.savefig('../graphs/precision_recall_curve_pca.png')  # Guardar la gráfica
 plt.close()  # Cerrar la figura
-
 
 # Obtener los coeficientes del hiperplano
 w = classifier.coef_[0]

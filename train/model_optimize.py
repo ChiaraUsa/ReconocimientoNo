@@ -126,6 +126,13 @@ best_predictions = best_classifier.predict(test_data_pca)
 print(f"Classification report for the best classifier {best_classifier}:\n"
       f"{metrics.classification_report(test_labels, best_predictions)}\n")
 
+# Calcular la matriz de confusión
+cm = metrics.confusion_matrix(test_labels, best_predictions)
+disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_classifier.classes_)
+disp.plot()
+plt.savefig('../graphs/confusion_matrix_opt.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
+
 # Calcular las probabilidades de decisión
 decision_function = best_classifier.decision_function(test_data_pca)
 

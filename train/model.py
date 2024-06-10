@@ -82,6 +82,13 @@ prediction=classifier.predict(test_data)
 print(f"Classification report for classifier {classifier}:\n"
       f"{metrics.classification_report(test_labels, prediction)}\n")  
 
+# Calcular la matriz de confusión
+cm = metrics.confusion_matrix(test_labels, prediction)
+disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classifier.classes_)
+disp.plot()
+plt.savefig('../graphs/confusion_matrix.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
+
 n_classes = 10  # Número de clases en MNIST
 y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
 
