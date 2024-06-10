@@ -1,7 +1,7 @@
 # Importaciones necesarias
-from sklearn import metrics, precision_recall_curve
+from sklearn import metrics
 from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from joblib import dump
 from sklearn.datasets import fetch_openml
 from sklearn.utils import check_random_state
@@ -82,23 +82,35 @@ prediction=classifier.predict(test_data)
 print(f"Classification report for classifier {classifier}:\n"
       f"{metrics.classification_report(test_labels, prediction)}\n")  
 
-# Calcular las probabilidades de decisión
+n_classes = 10  # Número de clases en MNIST
+y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
+
+# Calcular la función de decisión para cada clase
 decision_function = classifier.decision_function(test_data)
 
-# Curva de Precisión-Exhaustividad
-precision, recall, _ = precision_recall_curve(test_labels, decision_function)
-plt.figure()
-plt.plot(recall, precision, lw=2, color='b', label='Precision-Recall curve')
+# Calcular y trazar la curva Precision-Recall para cada clase
+for i in range(n_classes):
+    precision, recall, _ = metrics.precision_recall_curve(y_test_binarized[:, i], decision_function[:, i])
+    plt.plot(recall, precision, lw=2, label=f'Class {i}')
+    
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plt.title('Precision-Recall Curve')
+plt.title('Curva Precision-Recall por Clase')
 plt.legend(loc='best')
-plt.show()      
+plt.savefig('../graphs/precision_recall_curve_multiclass.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
 
-# Obtener los coeficientes del hiperplano
+# Convertir las etiquetas a formato numpy
+train_labels = train_labels.astype(int)
+test_labels = test_labels.astype(int)
+
+# Intentar obtener los coeficientes del hiperplano
 w = classifier.coef_[0]
-slope = -w[0] / w[1]
-intercept = -classifier.intercept_[0] / w[1]
+
+# Agregar un pequeño valor epsilon para evitar división por cero
+epsilon = 1e-10
+slope = -w[0] / (w[1] + epsilon)
+intercept = -classifier.intercept_[0] / (w[1] + epsilon)
 
 # Crear una línea para el hiperplano de decisión
 xx = np.linspace(min(train_data[:, 0]), max(train_data[:, 0]))
@@ -120,5 +132,6 @@ plt.scatter(classifier.support_vectors_[:, 0], classifier.support_vectors_[:, 1]
 
 plt.xlabel('Feature 1')
 plt.ylabel('Feature 2')
-plt.title('SVM with Linear Kernel')
-plt.show()
+plt.title('SVM con Kernel Lineal')
+plt.savefig('../graphs/svm_hyperplane.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura

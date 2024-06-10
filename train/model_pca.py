@@ -1,8 +1,8 @@
 # Importación de Modulos
-from sklearn import metrics, precision_recall_curve
+from sklearn import metrics
 from sklearn.svm import SVC
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from joblib import dump
 from sklearn.datasets import fetch_openml
 from sklearn.utils import check_random_state
@@ -51,7 +51,7 @@ def fetch_data(test_size=10000, randomize=False, standardize=True):
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
-        dump(scaler, '../models/scaler.joblib')
+        dump(scaler, '../models/scaler_pca.joblib')
     return X_train, y_train, X_test, y_test
 
 def compute_covariance_matrix(X):
@@ -128,18 +128,24 @@ predicted = classifier.predict(test_data_pca)
 print(f"Classification report for classifier {classifier}:\n"
       f"{metrics.classification_report(test_labels, predicted)}\n")
 
-# Calcular las probabilidades de decisión
+n_classes = 10  # Número de clases en MNIST
+y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
+
+# Calcular la función de decisión para cada clase
 decision_function = classifier.decision_function(test_data_pca)
 
-# Curva de Precisión-Exhaustividad
-precision, recall, _ = precision_recall_curve(test_labels, decision_function)
-plt.figure()
-plt.plot(recall, precision, lw=2, color='b', label='Precision-Recall curve')
+# Calcular y trazar la curva Precision-Recall para cada clase
+for i in range(n_classes):
+    precision, recall, _ = metrics.precision_recall_curve(y_test_binarized[:, i], decision_function[:, i])
+    plt.plot(recall, precision, lw=2, label=f'Class {i}')
+    
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plt.title('Precision-Recall Curve')
+plt.title('Curva Precision-Recall por Clase')
 plt.legend(loc='best')
-plt.show()      
+plt.savefig('../graphs/precision_recall_curve_pca.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
+
 
 # Obtener los coeficientes del hiperplano
 w = classifier.coef_[0]
@@ -155,8 +161,13 @@ margin = 1 / np.sqrt(np.sum(classifier.coef_ ** 2))
 yy_down = yy - np.sqrt(1 + slope ** 2) * margin
 yy_up = yy + np.sqrt(1 + slope ** 2) * margin
 
+# Convertir las etiquetas de clase a valores numéricos
+unique_labels = train_labels.unique()
+label_to_num = {label: num for num, label in enumerate(unique_labels)}
+numeric_labels = train_labels.map(label_to_num)
+
 # Plotear los datos y los hiperplanos
-plt.scatter(train_data_pca[:, 0], train_data_pca[:, 1], c=train_labels, cmap='coolwarm', s=30)
+plt.scatter(train_data_pca[:, 0], train_data_pca[:, 1], c=numeric_labels, cmap='coolwarm', s=30)
 plt.plot(xx, yy, 'k-')
 plt.plot(xx, yy_down, 'k--')
 plt.plot(xx, yy_up, 'k--')
@@ -166,5 +177,6 @@ plt.scatter(classifier.support_vectors_[:, 0], classifier.support_vectors_[:, 1]
 
 plt.xlabel('Feature 1')
 plt.ylabel('Feature 2')
-plt.title('SVM with Linear Kernel')
-plt.show()
+plt.title('SVM con Kernel Lineal')
+plt.savefig('../graphs/svc_pca.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
