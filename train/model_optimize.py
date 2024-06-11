@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import tensorflow
 from sklearn import metrics
 from sklearn.svm import SVC
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.datasets import fetch_openml
 from sklearn.utils import check_random_state
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -115,80 +115,83 @@ combined_train_data_pca = pca.fit_transform(combined_train_data)
 test_data_pca = pca.transform(test_data)
 
 # Guardar el modelo PCA ajustado
-dump(pca, '../models/pca_model_auto.joblib')
+dump(pca, '../models/pca_model_auto.joblib')    
 
-print('Inicio de Ajuste de hiperparámetros')
+print('Inicio de entrenamiento de SVC')
 
-# Ajuste de hiperparámetros utilizando búsqueda en cuadrícula
-param_grid = {'C': [0.1, 1, 10, 100], 'kernel': ['linear']}  # Definir el espacio de parámetros
-grid_search = GridSearchCV(SVC(), param_grid, cv=5)  # Configurar la búsqueda en cuadrícula con validación cruzada
-grid_search.fit(combined_train_data_pca, combined_train_labels)  # Ajustar el modelo
+# Entrenar el modelo SVM
+classifier = SVC(kernel="linear", random_state=6)
+classifier.fit(combined_train_data_pca, combined_train_labels)
 
-# Obtener el mejor modelo encontrado por la búsqueda en cuadrícula
-best_classifier = grid_search.best_estimator_
-
-# Guardar el mejor modelo
-dump(best_classifier, '../models/best_svc_pca.joblib')
+# Guardar el modelo entrenado y los componentes PCA
+dump(classifier, '../models/svc_optimize_pca.joblib')
 
 print('Inicio de predicción')
 
 # Realizar predicciones en el conjunto de prueba
-best_predictions = best_classifier.predict(test_data_pca)
+predictions = classifier.predict(test_data_pca)
 
 # Imprimir el reporte de clasificación
-print(f"Classification report for the best classifier {best_classifier}:\n"
-      f"{metrics.classification_report(test_labels, best_predictions)}\n")
+print(f"Classification report for the best classifier {classifier}:\n"
+      f"{metrics.classification_report(test_labels, predictions)}\n")
 
 # Calcular la matriz de confusión
-cm = metrics.confusion_matrix(test_labels, best_predictions)
+cm = metrics.confusion_matrix(test_labels, predictions)
 # Visualizar la matriz de confusión
-disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_classifier.classes_)
+disp = metrics.ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classifier.classes_)
 disp.plot()
-plt.savefig('../graphs/confusion_matrix_opt.png')  # Guardar la gráfica de la matriz de confusión
+plt.savefig('../graphs/confusion_matrix_optimize.png')  # Guardar la gráfica
 plt.close()  # Cerrar la figura
 
-# Calcular las probabilidades de decisión
-decision_function = best_classifier.decision_function(test_data_pca)
+n_classes = 10  # Número de clases en MNIST
+# Convertir las etiquetas a formato binarizado
+y_test_binarized = label_binarize(test_labels, classes=[str(i) for i in range(n_classes)])
 
-# Curva de Precisión-Exhaustividad
-precision, recall, _ = metrics.precision_recall_curve(test_labels, decision_function)
-plt.figure()
-plt.plot(recall, precision, lw=2, color='b', label='Precision-Recall curve')
+# Calcular la función de decisión para cada clase
+decision_function = classifier.decision_function(test_data_pca)
+
+# Calcular y trazar la curva Precision-Recall para cada clase
+for i in range(n_classes):
+    precision, recall, _ = metrics.precision_recall_curve(y_test_binarized[:, i], decision_function[:, i])
+    plt.plot(recall, precision, lw=2, label=f'Class {i}')
+    
 plt.xlabel('Recall')
 plt.ylabel('Precision')
-plt.title('Precision-Recall Curve')
+plt.title('Curva Precision-Recall por Clase')
 plt.legend(loc='best')
-# Guardar la gráfica como archivo de imagen
-plt.savefig('../graphs/optimize_curve.png')
-plt.show()
+plt.savefig('../graphs/optimize_curve_pca.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura
 
 # Obtener los coeficientes del hiperplano
-w = best_classifier.coef_[0]
+w = classifier.coef_[0]
 slope = -w[0] / w[1]
-intercept = -best_classifier.intercept_[0] / w[1]
+intercept = -classifier.intercept_[0] / w[1]
 
 # Crear una línea para el hiperplano de decisión
 xx = np.linspace(min(combined_train_data_pca[:, 0]), max(combined_train_data_pca[:, 0]))
 yy = slope * xx + intercept
 
 # Crear márgenes (paralelos al hiperplano de decisión)
-margin = 1 / np.sqrt(np.sum(best_classifier.coef_ ** 2))
+margin = 1 / np.sqrt(np.sum(classifier.coef_ ** 2))
 yy_down = yy - np.sqrt(1 + slope ** 2) * margin
 yy_up = yy + np.sqrt(1 + slope ** 2) * margin
 
+# Convertir las etiquetas de clase a valores numéricos
+unique_labels = np.unique(combined_train_labels)
+label_to_num = {label: num for num, label in enumerate(unique_labels)}
+numeric_labels = np.vectorize(label_to_num.get)(combined_train_labels)
+
 # Plotear los datos y los hiperplanos
-plt.figure()
-plt.scatter(combined_train_data_pca[:, 0], combined_train_data_pca[:, 1], c=combined_train_labels, cmap='coolwarm', s=30)
+plt.scatter(combined_train_data_pca[:, 0], combined_train_data_pca[:, 1], c=numeric_labels, cmap='coolwarm', s=30)
 plt.plot(xx, yy, 'k-')
 plt.plot(xx, yy_down, 'k--')
 plt.plot(xx, yy_up, 'k--')
 
 # Resaltar los vectores de soporte
-plt.scatter(best_classifier.support_vectors_[:, 0], best_classifier.support_vectors_[:, 1], s=100, facecolors='none', edgecolors='k')
+plt.scatter(classifier.support_vectors_[:, 0], classifier.support_vectors_[:, 1], s=100, facecolors='none', edgecolors='k')
 
 plt.xlabel('Feature 1')
 plt.ylabel('Feature 2')
-plt.title('SVM with Linear Kernel')
-# Guardar la gráfica como archivo de imagen
-plt.savefig('../graphs/svm_optimize.png')
-plt.show()
+plt.title('SVM con Kernel Lineal')
+plt.savefig('../graphs/svc_optimize.png')  # Guardar la gráfica
+plt.close()  # Cerrar la figura

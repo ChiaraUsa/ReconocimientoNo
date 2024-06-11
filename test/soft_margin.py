@@ -10,12 +10,26 @@ import tensorflow as tf
 
 # Cargar los datos MNIST
 def load_mnist_data(randomize=False, standardize=True):
+    """
+    Carga el conjunto de datos MNIST, con opciones para aleatorizar y estandarizar los datos.
+
+    Parámetros:
+    randomize (bool): Si es True, aleatoriza los datos de entrenamiento y prueba.
+    standardize (bool): Si es True, estandariza los datos utilizando StandardScaler.
+
+    Retorna:
+    X_train (ndarray): Imágenes de entrenamiento aplanadas y normalizadas.
+    X_test (ndarray): Imágenes de prueba aplanadas y normalizadas.
+    y_train (ndarray): Etiquetas de las imágenes de entrenamiento.
+    y_test (ndarray): Etiquetas de las imágenes de prueba.
+    """
     mnist = tf.keras.datasets.mnist
     (X_train, y_train), (X_test, y_test) = mnist.load_data()
     
+    # Aleatorizar los datos si se especifica
     if randomize:
         random_state = check_random_state(0)
-        permutation_train = random_state.permutation(X_train.shape[0])
+        permutation_train = random_state.permutation(X_train.shape[0])  
         permutation_test = random_state.permutation(X_test.shape[0])
         X_train = X_train[permutation_train]
         y_train = y_train[permutation_train]
@@ -26,6 +40,7 @@ def load_mnist_data(randomize=False, standardize=True):
     X_train = X_train.reshape(-1, 28*28).astype('float32') / 255.0
     X_test = X_test.reshape(-1, 28*28).astype('float32') / 255.0
     
+    # Estandarizar los datos si se especifica
     if standardize:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
@@ -35,6 +50,7 @@ def load_mnist_data(randomize=False, standardize=True):
     
     return X_train, X_test, y_train, y_test
 
+# Llamada a la función para cargar y procesar los datos MNIST
 X_train, X_test, y_train, y_test = load_mnist_data(randomize=True, standardize=True)
 
 # Reducir las dimensiones a 2D con PCA
@@ -52,6 +68,16 @@ svm_binary.fit(X_train_reduced, y_train_binary)
 
 # Función para visualizar el margen suave en 2D
 def plot_soft_margin(clf, X, y):
+    """
+    Visualiza el margen suave de un clasificador SVM en un espacio 2D reducido.
+
+    Parámetros:
+    clf (SVC): El clasificador SVM entrenado.
+    X (ndarray): Datos de entrada reducidos a 2D.
+    y (ndarray): Etiquetas binarias para la clase de interés.
+
+    Esta función genera y guarda un gráfico que muestra los márgenes del SVM.
+    """
     print(f"Tamaño de X_reduced: {X.shape}")
 
     x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
@@ -80,7 +106,8 @@ def plot_soft_margin(clf, X, y):
     plt.xlabel('PC1')
     plt.ylabel('PC2')
     plt.title(f'Soft Margin for Class {class_of_interest} in 2D PCA Space')
-    plt.show()
+    plt.savefig('../graphs/margenes_por_clase.png')
+    plt.close()
 
 # Visualizar el margen suave en 2D
 plot_soft_margin(svm_binary, X_train_reduced, y_train_binary)
