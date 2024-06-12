@@ -68,6 +68,8 @@ El proyecto tiene como objetivo desarrollar un sistema que reconozca dígitos es
 ```
 ReconocimientoNo/
 │
+├── documents/                   # En la carpeta encontrará los documentos de investigación
+│
 ├── train/
 │   └── model.py                 # Script para entrenar el modelo SVM
 │   └── model_pca.py             # Script para entrenar el modelo SVM y aplicar PCA
