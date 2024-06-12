@@ -8,6 +8,8 @@ import warnings
 
 # Ignorar advertencias específicas para una mejor legibilidad
 warnings.filterwarnings("ignore", message="X does not have valid feature names")
+warnings.filterwarnings('ignore', message='SymbolDatabase.GetPrototype() is deprecated. Please use message_factory.GetMessageClass() instead. SymbolDatabase.GetPrototype() will be removed soon.')
+
 
 # Cargar el modelo de reconocimiento de dígitos y el escalador
 model = load('../models/digit_recognizer')
