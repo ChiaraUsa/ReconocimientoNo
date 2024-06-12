@@ -60,8 +60,7 @@ El proyecto tiene como objetivo desarrollar un sistema que reconozca dígitos es
 
    Ejecute el script de reconocimiento para iniciar el reconocimiento de dígitos en tiempo real usando su cámara web:
    ```sh
-   python test/recognize.py
-   python test/recognize_n_pca.py
+   python test/final_recognition.py
    ```
 
 ## Estructura del Proyecto
@@ -72,25 +71,25 @@ ReconocimientoNo/
 ├── train/
 │   └── model.py                 # Script para entrenar el modelo SVM
 │   └── model_pca.py             # Script para entrenar el modelo SVM y aplicar PCA
+│   └── model_optimize.py        # Script para entrenar el modelo SVM, aumento de datos y aplicar PCA automático 
 │
 ├── test/
 │   └── recognize.py             # Script para reconocimiento de dígitos en tiempo real
-│   └── recognize_n_pca.py       # Script para reconocimiento de dígitos en tiempo real con PCA
+│   └── recognize_pca.py         # Script para reconocimiento de dígitos en tiempo real con PCA
+│   └── final_recognition.py     # Script para reconocimiento de dígitos y de trazos en tiempo real
+│   └── recognize_canva.py       # Script para reconocimiento de trazos de dígitos en tiempo real
+│   └── soft_margin.py           # Script para calculo de márgenes de la SVC
 │
 ├── pytest/
 │   └── test_recognition.py      # Script de pruebas unitarias y de integración
 │
-├── models/
-│   ├── digit_recognizer                 # Modelo entrenado de SVM
-│   ├── scaler.joblib                    # Escalador para datos
-│   ├── svc_digit_classifier_pca.joblib  # Modelo entrenado de SVM con PCA
-│   ├── scaler_pca.joblib                # Escalador para datos con PCA
-│   ├── pca.joblib                       # PCA
-│   └── selected_eigenvectors.npy        # Componentes PCA
+├── models/                      # En la carpeta encontrará los modelos entrenados
 │
+├── graphs/                      # En la carpeta encontrará los gráficos calculados
+|
 ├── README.md
-├── requirements.txt            # Lista de dependencias
-└── .gitignore                  # Archivo git ignore
+├── requirements.txt             # Lista de dependencias
+└── .gitignore                     # Archivo git ignore
 ```
 
 ## Contribuciones
