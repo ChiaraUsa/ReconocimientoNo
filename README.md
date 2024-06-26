@@ -4,6 +4,7 @@ Este repositorio contiene la implementación de un sistema de reconocimiento de 
 
 ## Autores
 - Chiara Valenzuela.
+- Mitchell Bermín.
   
 ## Tabla de Contenidos
 
