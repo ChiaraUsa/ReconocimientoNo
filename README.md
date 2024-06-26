@@ -4,8 +4,6 @@ Este repositorio contiene la implementación de un sistema de reconocimiento de 
 
 ## Autores
 - Chiara Valenzuela.
-- Mitchell Bermin.
-- Oscar Miranda.
   
 ## Tabla de Contenidos
 
@@ -47,6 +45,8 @@ El proyecto tiene como objetivo desarrollar un sistema que reconozca dígitos es
    ```
 
 ## Uso
+
+Por favor verifique que las rutas coincidan con las usadas.
 
 1. **Entrenamiento del Modelo:**
 
